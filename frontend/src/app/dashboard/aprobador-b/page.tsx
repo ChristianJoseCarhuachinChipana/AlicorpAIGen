@@ -28,6 +28,7 @@ export default function AprobadorBPage() {
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [expandedAuditoria, setExpandedAuditoria] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -187,24 +188,63 @@ export default function AprobadorBPage() {
                 <div className="space-y-3">
                   {auditorias.map((aud) => {
                     const content = contenidos.find(c => c.id === aud.contenido_id);
+                    const isExpanded = expandedAuditoria === aud.id;
                     return (
-                      <div key={aud.id} className="p-3 border border-gray-100 rounded-lg">
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium text-gray-900">
-                            {content?.titulo || 'Contenido desconocido'}
-                          </span>
-                          <span className={getScoreClass(aud.score_conformidad || 0)}>
-                            {((aud.score_conformidad || 0) * 100).toFixed(0)}%
-                          </span>
+                      <div 
+                        key={aud.id} 
+                        className={`border rounded-lg overflow-hidden transition-all duration-200 ${isExpanded ? 'border-primary/50' : 'border-gray-100'}`}
+                      >
+                        <div 
+                          className="p-3 cursor-pointer hover:bg-gray-50 transition-colors"
+                          onClick={() => setExpandedAuditoria(isExpanded ? null : aud.id)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium text-gray-900">
+                              {content?.titulo || 'Contenido desconocido'}
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className={getScoreClass(aud.score_conformidad || 0)}>
+                                {((aud.score_conformidad || 0) * 100).toFixed(0)}%
+                              </span>
+                              <svg 
+                                className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} 
+                                fill="none" 
+                                stroke="currentColor" 
+                                viewBox="0 0 24 24"
+                              >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant={aud.resultado?.cumple ? 'success' : 'danger'}>
+                              {aud.resultado?.cumple ? '✓ Cumple' : '✗ No cumple'}
+                            </Badge>
+                            <span className="text-xs text-gray-400">
+                              {new Date(aud.created_at).toLocaleDateString()}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant={aud.resultado?.cumple ? 'success' : 'danger'}>
-                            {aud.resultado?.cumple ? '✓ Cumple' : '✗ No cumple'}
-                          </Badge>
-                          <span className="text-xs text-gray-400">
-                            {new Date(aud.created_at).toLocaleDateString()}
-                          </span>
-                        </div>
+                        {isExpanded && (
+                          <div className="p-3 bg-gray-50 border-t border-gray-100">
+                            <div className={`p-3 rounded-lg ${(aud.score_conformidad || 0) >= 0.7 ? 'bg-green-50' : 'bg-red-50'}`}>
+                              <p className="text-sm">
+                                <span className="font-medium">Score de Conformidad: </span>
+                                <span className={getScoreClass(aud.score_conformidad || 0)}>
+                                  {((aud.score_conformidad || 0) * 100).toFixed(0)}%
+                                </span>
+                              </p>
+                              {aud.gemini_analysis && (
+                                <div className="mt-2">
+                                  <span className="text-sm font-medium">Análisis:</span>
+                                  <pre className="mt-1 text-sm whitespace-pre-wrap text-gray-700">
+                                    {aud.gemini_analysis}
+                                  </pre>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
