@@ -54,3 +54,43 @@ export interface AuthResponse {
   token_type: string;
   user: User;
 }
+
+/**
+ * Resultado del análisis de imagen por IA (Gemini)
+ */
+export interface AnalysisResult {
+  /** Indica si el análisis fue exitoso */
+  success: boolean;
+  /** Score de conformidad (0-1) */
+  score: number;
+  /** Análisis textual generado por la IA */
+  analysis?: string;
+  /** Mensaje de error si el análisis falló */
+  error?: string;
+  /** Auditoría creada en la base de datos */
+  auditoria?: Auditoria;
+}
+
+/**
+ * Estadísticas del dashboard
+ */
+export interface DashboardStats {
+  totalManuals: number;
+  totalContenidos: number;
+  pendientes: number;
+  aprobados: number;
+  rechazados: number;
+  auditorias: number;
+}
+
+/**
+ * Opciones para configuración de página
+ */
+export interface PageConfig {
+  /** Título de la página */
+  title: string;
+  /** Roles permitidos para acceder */
+  allowedRoles?: Array<'creador' | 'aprobador_a' | 'aprobador_b' | 'admin'>;
+  /** Mostrar enlace al dashboard */
+  showDashboard?: boolean;
+}

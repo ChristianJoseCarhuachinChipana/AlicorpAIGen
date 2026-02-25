@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Cookies from 'js-cookie';
-import { authApi, brandApi, contenidoApi } from '@/lib/api';
-import { User, BrandManual, Contenido } from '@/types';
+import { brandApi, contenidoApi } from '@/lib/api';
+import { BrandManual, Contenido } from '@/types';
 import { 
   DashboardLayout, 
   Card, 
@@ -18,9 +17,15 @@ import {
   Alert, 
   StatusBadge 
 } from '@/components';
+import { ManualList } from '@/components/dashboard';
+import { useAuth } from '@/hooks';
 
 export default function CreadorPage() {
-  const [user, setUser] = useState<User | null>(null);
+  const { user, loading: authLoading, logout } = useAuth({
+    allowedRoles: ['creador', 'admin'],
+  });
+  const router = useRouter();
+
   const [manuals, setManuals] = useState<BrandManual[]>([]);
   const [contenidos, setContenidos] = useState<Contenido[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,7 +34,6 @@ export default function CreadorPage() {
   const [creatingContent, setCreatingContent] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const router = useRouter();
 
   const [manualForm, setManualForm] = useState({
     nombre: '',
@@ -45,24 +49,6 @@ export default function CreadorPage() {
     titulo: ''
   });
 
-  useEffect(() => {
-    const token = Cookies.get('access_token');
-    if (!token) {
-      router.push('/');
-      return;
-    }
-
-    authApi.getMe()
-      .then((userData) => {
-        setUser(userData);
-        if (!['creador', 'admin'].includes(userData.role)) {
-          router.push('/dashboard');
-        }
-      })
-      .catch(() => router.push('/'))
-      .finally(() => setLoading(false));
-  }, [router]);
-
   const loadData = async () => {
     try {
       const [manualsData, contenidoData] = await Promise.all([
@@ -73,6 +59,8 @@ export default function CreadorPage() {
       setContenidos(contenidoData);
     } catch (err) {
       console.error('Error loading data:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -92,8 +80,9 @@ export default function CreadorPage() {
       setSuccess('Manual de marca creado correctamente');
       setManualForm({ nombre: '', producto: '', tono: '', público_objetivo: '', restricciones: '' });
       loadData();
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Error al crear manual');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al crear manual';
+      setError(errorMessage);
     } finally {
       setCreatingManual(false);
     }
@@ -109,15 +98,16 @@ export default function CreadorPage() {
       setSuccess('Contenido generado correctamente');
       setContentForm({ brand_manual_id: '', tipo: 'descripcion', titulo: '' });
       loadData();
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Error al generar contenido');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al generar contenido';
+      setError(errorMessage);
     } finally {
       setCreatingContent(false);
     }
   };
 
   return (
-    <DashboardLayout user={user} title="Content Suite - Creador" loading={loading}>
+    <DashboardLayout user={user} title="Content Suite - Creador" loading={authLoading}>
       <div className="space-y-6">
         <h1 className="text-2xl font-bold text-gray-900">Panel de Creador</h1>
         
@@ -193,19 +183,11 @@ export default function CreadorPage() {
                 <CardTitle>Manuales Existentes</CardTitle>
               </CardHeader>
               <CardContent>
-                {manuals.length === 0 ? (
-                  <p className="text-gray-500 text-center py-4">No hay manuales creados aún</p>
-                ) : (
-                  <div className="space-y-3">
-                    {manuals.map((manual) => (
-                      <div key={manual.id} className="p-3 border border-gray-100 rounded-lg">
-                        <div className="font-semibold text-gray-900">{manual.nombre}</div>
-                        <p className="text-sm text-gray-500">{manual.producto}</p>
-                        <p className="text-sm text-gray-400">Tono: {manual.tono}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <ManualList 
+                  manuales={manuals} 
+                  loading={loading}
+                  emptyMessage="No hay manuales creados aún"
+                />
               </CardContent>
             </Card>
           </div>

@@ -29,8 +29,9 @@ export default function LoginPage() {
       const response = await authApi.login(email, password);
       Cookies.set('access_token', response.access_token, { expires: 1 });
       router.push('/dashboard');
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Error al iniciar sesión');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al iniciar sesión';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

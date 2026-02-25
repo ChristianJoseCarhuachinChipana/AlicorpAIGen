@@ -1,10 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Cookies from 'js-cookie';
-import { authApi, brandApi, contenidoApi, auditoriaApi } from '@/lib/api';
-import { User, BrandManual, Contenido, Auditoria } from '@/types';
+import { brandApi, contenidoApi, auditoriaApi } from '@/lib/api';
+import { BrandManual, Contenido, Auditoria } from '@/types';
 import { 
   DashboardLayout, 
   Card, 
@@ -12,35 +10,34 @@ import {
   CardTitle, 
   CardContent,
   Button, 
-  Badge,
-  StatusBadge 
+  Badge 
 } from '@/components';
+import { StatsCard, StatGrid, ManualList } from '@/components/dashboard';
+import { useAuth } from '@/hooks';
+
+/**
+ * Calcula las estadísticas del dashboard
+ */
+function calculateStats(manuals: BrandManual[], contenidos: Contenido[], auditorias: Auditoria[]) {
+  return {
+    totalManuals: manuals.length,
+    totalContenidos: contenidos.length,
+    pendientes: contenidos.filter(c => c.estado === 'pendiente').length,
+    aprobados: contenidos.filter(c => c.estado === 'aprobado').length,
+    rechazados: contenidos.filter(c => c.estado === 'rechazado').length,
+    auditorias: auditorias.length
+  };
+}
 
 export default function AdminPage() {
-  const [user, setUser] = useState<User | null>(null);
+  const { user, loading: authLoading } = useAuth({
+    allowedRoles: ['admin'],
+  });
+
   const [manuals, setManuals] = useState<BrandManual[]>([]);
   const [contenidos, setContenidos] = useState<Contenido[]>([]);
   const [auditorias, setAuditorias] = useState<Auditoria[]>([]);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
-
-  useEffect(() => {
-    const token = Cookies.get('access_token');
-    if (!token) {
-      router.push('/');
-      return;
-    }
-
-    authApi.getMe()
-      .then((userData) => {
-        setUser(userData);
-        if (userData.role !== 'admin') {
-          router.push('/dashboard');
-        }
-      })
-      .catch(() => router.push('/'))
-      .finally(() => setLoading(false));
-  }, [router]);
 
   const loadData = async () => {
     try {
@@ -54,6 +51,8 @@ export default function AdminPage() {
       setAuditorias(auditoriasData);
     } catch (err) {
       console.error('Error loading data:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -73,34 +72,18 @@ export default function AdminPage() {
     }
   };
 
-  const stats = {
-    totalManuals: manuals.length,
-    totalContenidos: contenidos.length,
-    pendientes: contenidos.filter(c => c.estado === 'pendiente').length,
-    aprobados: contenidos.filter(c => c.estado === 'aprobado').length,
-    rechazados: contenidos.filter(c => c.estado === 'rechazado').length,
-    auditorias: auditorias.length
-  };
+  const stats = calculateStats(manuals, contenidos, auditorias);
 
   return (
-    <DashboardLayout user={user} title="Content Suite - Administrador" loading={loading}>
+    <DashboardLayout user={user} title="Content Suite - Administrador" loading={authLoading}>
       <div className="space-y-6">
         <h1 className="text-2xl font-bold text-gray-900">Panel de Administración</h1>
         
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Card className="text-center">
-            <div className="text-3xl font-bold text-primary">{stats.totalManuals}</div>
-            <div className="text-gray-500 text-sm mt-1">Manuales de Marca</div>
-          </Card>
-          <Card className="text-center">
-            <div className="text-3xl font-bold text-warning">{stats.pendientes}</div>
-            <div className="text-gray-500 text-sm mt-1">Contenidos Pendientes</div>
-          </Card>
-          <Card className="text-center">
-            <div className="text-3xl font-bold text-success">{stats.aprobados}</div>
-            <div className="text-gray-500 text-sm mt-1">Contenidos Aprobados</div>
-          </Card>
-        </div>
+        <StatGrid>
+          <StatsCard value={stats.totalManuals} label="Manuales de Marca" valueColor="text-primary" />
+          <StatsCard value={stats.pendientes} label="Contenidos Pendientes" valueColor="text-warning" />
+          <StatsCard value={stats.aprobados} label="Contenidos Aprobados" valueColor="text-success" />
+        </StatGrid>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
@@ -108,27 +91,12 @@ export default function AdminPage() {
               <CardTitle>Manuales de Marca</CardTitle>
             </CardHeader>
             <CardContent>
-              {manuals.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">No hay manuales</p>
-              ) : (
-                <div className="space-y-2">
-                  {manuals.map((manual) => (
-                    <div key={manual.id} className="flex items-center justify-between p-3 border border-gray-100 rounded-lg">
-                      <div>
-                        <div className="font-medium text-gray-900">{manual.nombre}</div>
-                        <div className="text-sm text-gray-500">{manual.producto}</div>
-                      </div>
-                      <Button 
-                        onClick={() => handleDeleteManual(manual.id)}
-                        variant="danger"
-                        size="sm"
-                      >
-                        Eliminar
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <ManualList 
+                manuales={manuals} 
+                onDelete={handleDeleteManual}
+                loading={loading}
+                emptyMessage="No hay manuales"
+              />
             </CardContent>
           </Card>
 

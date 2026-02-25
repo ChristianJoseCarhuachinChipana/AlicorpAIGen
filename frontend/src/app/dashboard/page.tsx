@@ -6,27 +6,37 @@ import Cookies from 'js-cookie';
 import { authApi } from '@/lib/api';
 import { User } from '@/types';
 import { DashboardLayout, Card, Loading } from '@/components';
+import { useAuth } from '@/hooks';
+
+/**
+ * Mapeo de roles a etiquetas legibles
+ */
+const roleLabels: Record<string, string> = {
+  creador: 'Creador de Contenido',
+  aprobador_a: 'Aprobador de Contenido',
+  aprobador_b: 'Auditor Visual',
+  admin: 'Administrador',
+};
+
+/**
+ * Obtiene la URL del dashboard según el rol del usuario
+ */
+function getDashboardUrl(role: string): string {
+  const roleUrls: Record<string, string> = {
+    creador: '/dashboard/creador',
+    aprobador_a: '/dashboard/aprobador-a',
+    aprobador_b: '/dashboard/aprobador-b',
+    admin: '/dashboard/admin',
+  };
+  return roleUrls[role] || '/dashboard/creador';
+}
 
 export default function DashboardPage() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, loading: authLoading, logout } = useAuth({
+    redirectToLogin: true,
+    redirectOnUnauthorized: false,
+  });
   const router = useRouter();
-
-  useEffect(() => {
-    const token = Cookies.get('access_token');
-    if (!token) {
-      router.push('/');
-      return;
-    }
-
-    authApi.getMe()
-      .then(setUser)
-      .catch(() => {
-        Cookies.remove('access_token');
-        router.push('/');
-      })
-      .finally(() => setLoading(false));
-  }, [router]);
 
   const getDashboardUrl = () => {
     switch (user?.role) {
@@ -43,15 +53,12 @@ export default function DashboardPage() {
     }
   };
 
-  const roleLabels: Record<string, string> = {
-    creador: 'Creador de Contenido',
-    aprobador_a: 'Aprobador de Contenido',
-    aprobador_b: 'Auditor Visual',
-    admin: 'Administrador',
-  };
+  if (authLoading) {
+    return <Loading fullScreen text="Cargando..." />;
+  }
 
   return (
-    <DashboardLayout user={user} title="Content Suite" loading={loading} showDashboard={false}>
+    <DashboardLayout user={user} title="Content Suite" loading={authLoading} showDashboard={false}>
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Bienvenido, {user?.nombre}</h1>
