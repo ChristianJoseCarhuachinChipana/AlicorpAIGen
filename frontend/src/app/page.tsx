@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 import { authApi } from '@/lib/api';
+import { Button, Input, Alert } from '@/components';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -36,53 +37,53 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="login-page">
-      <div className="login-card">
-        <h1 className="login-title">Content Suite</h1>
-        <p style={{ textAlign: 'center', marginBottom: '1.5rem', color: '#666' }}>
-          Inicia sesión para continuar
-        </p>
-        
-        {error && <div className="error">{error}</div>}
-        
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label className="form-label">Email</label>
-            <input
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary to-primary-dark p-4">
+      <div className="w-full max-w-md">
+        <div className="bg-white rounded-2xl shadow-2xl p-8">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-primary mb-2">Content Suite</h1>
+            <p className="text-gray-500">Inicia sesión para continuar</p>
+          </div>
+          
+          {error && (
+            <Alert variant="error" onClose={() => setError('')}>
+              {error}
+            </Alert>
+          )}
+          
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <Input
+              label="Email"
               type="email"
-              className="form-input"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
               placeholder="tu@email.com"
             />
-          </div>
-          
-          <div className="form-group">
-            <label className="form-label">Contraseña</label>
-            <input
+            
+            <Input
+              label="Contraseña"
               type="password"
-              className="form-input"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               placeholder="••••••••"
             />
-          </div>
-          
-          <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
-            {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
-          </button>
-        </form>
+            
+            <Button type="submit" className="w-full" size="lg" loading={loading}>
+              {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+            </Button>
+          </form>
 
-        <div style={{ marginTop: '1.5rem', fontSize: '0.875rem', color: '#666' }}>
-          <strong>Usuarios de prueba:</strong>
-          <ul style={{ marginTop: '0.5rem', paddingLeft: '1.25rem' }}>
-            <li>creador@alicorp.com / admin123</li>
-            <li>aprobadora@alicorp.com / admin123</li>
-            <li>aprobadorb@alicorp.com / admin123</li>
-            <li>admin@alicorp.com / admin123</li>
-          </ul>
+          <div className="mt-8 pt-6 border-t border-gray-100">
+            <p className="text-sm text-gray-500 font-medium mb-3">Usuarios de prueba:</p>
+            <ul className="text-sm text-gray-600 space-y-1">
+              <li><span className="font-medium">Creador:</span> creador@alicorp.com / admin123</li>
+              <li><span className="font-medium">Aprobador A:</span> aprobadora@alicorp.com / admin123</li>
+              <li><span className="font-medium">Aprobador B:</span> aprobadorb@alicorp.com / admin123</li>
+              <li><span className="font-medium">Admin:</span> admin@alicorp.com / admin123</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>

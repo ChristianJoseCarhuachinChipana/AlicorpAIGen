@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 import { authApi } from '@/lib/api';
 import { User } from '@/types';
+import { DashboardLayout, Card, Loading } from '@/components';
 
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -27,15 +28,6 @@ export default function DashboardPage() {
       .finally(() => setLoading(false));
   }, [router]);
 
-  const handleLogout = () => {
-    Cookies.remove('access_token');
-    router.push('/');
-  };
-
-  if (loading) {
-    return <div className="loading">Cargando...</div>;
-  }
-
   const getDashboardUrl = () => {
     switch (user?.role) {
       case 'creador':
@@ -55,43 +47,49 @@ export default function DashboardPage() {
     creador: 'Creador de Contenido',
     aprobador_a: 'Aprobador de Contenido',
     aprobador_b: 'Auditor Visual',
-    admin: 'Administrador'
+    admin: 'Administrador',
   };
 
   return (
-    <div>
-      <header className="header">
-        <div className="container header-content">
-          <div className="logo">Content Suite</div>
-          <nav className="nav">
-            <span style={{ opacity: 0.8 }}>{user?.nombre} ({roleLabels[user?.role || '']})</span>
-            <button onClick={handleLogout} className="btn" style={{ background: 'rgba(255,255,255,0.2)' }}>
-              Cerrar Sesión
-            </button>
-          </nav>
+    <DashboardLayout user={user} title="Content Suite" loading={loading} showDashboard={false}>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Bienvenido, {user?.nombre}</h1>
+          <p className="text-gray-600 mt-1">
+            Has iniciado sesión como <span className="font-semibold text-primary">{roleLabels[user?.role || '']}</span>
+          </p>
         </div>
-      </header>
 
-      <main className="container" style={{ padding: '2rem 20px' }}>
-        <h1 style={{ marginBottom: '1rem' }}>Bienvenido, {user?.nombre}</h1>
-        <p style={{ marginBottom: '2rem', color: '#666' }}>
-          Has iniciado sesión como <strong>{roleLabels[user?.role || '']}</strong>
-        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card hoverable onClick={() => router.push(getDashboardUrl())}>
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-primary/10 rounded-xl">
+                <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">Ir a Mi Dashboard</h2>
+                <p className="text-gray-500 text-sm">Accede a tu panel de trabajo según tu rol</p>
+              </div>
+            </div>
+          </Card>
 
-        <div className="grid grid-2">
-          <div className="card" onClick={() => router.push(getDashboardUrl())} style={{ cursor: 'pointer' }}>
-            <h2 style={{ marginBottom: '0.5rem' }}>Ir a Mi Dashboard</h2>
-            <p style={{ color: '#666' }}>Accede a tu panel de trabajo según tu rol</p>
-          </div>
-
-          <div className="card">
-            <h2 style={{ marginBottom: '0.5rem' }}>Ayuda</h2>
-            <p style={{ color: '#666' }}>
-              Contacta al administrador si necesitas assistance con el sistema.
-            </p>
-          </div>
+          <Card>
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-blue-100 rounded-xl">
+                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">Ayuda</h2>
+                <p className="text-gray-500 text-sm">Contacta al administrador si necesitas asistencia con el sistema.</p>
+              </div>
+            </div>
+          </Card>
         </div>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

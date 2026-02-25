@@ -5,6 +5,16 @@ import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 import { authApi, brandApi, contenidoApi, auditoriaApi } from '@/lib/api';
 import { User, BrandManual, Contenido, Auditoria } from '@/types';
+import { 
+  DashboardLayout, 
+  Card, 
+  CardHeader, 
+  CardTitle, 
+  CardContent,
+  Button, 
+  Badge,
+  StatusBadge 
+} from '@/components';
 
 export default function AdminPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -53,11 +63,6 @@ export default function AdminPage() {
     }
   }, [user]);
 
-  const handleLogout = () => {
-    Cookies.remove('access_token');
-    router.push('/');
-  };
-
   const handleDeleteManual = async (id: string) => {
     if (!confirm('¿Está seguro de eliminar este manual?')) return;
     try {
@@ -67,8 +72,6 @@ export default function AdminPage() {
       console.error('Error deleting manual:', err);
     }
   };
-
-  if (loading) return <div className="loading">Cargando...</div>;
 
   const stats = {
     totalManuals: manuals.length,
@@ -80,95 +83,112 @@ export default function AdminPage() {
   };
 
   return (
-    <div>
-      <header className="header">
-        <div className="container header-content">
-          <div className="logo">Content Suite - Administrador</div>
-          <nav className="nav">
-            <button onClick={() => router.push('/dashboard')} className="btn" style={{ background: 'rgba(255,255,255,0.2)' }}>
-              Inicio
-            </button>
-            <button onClick={handleLogout} className="btn" style={{ background: 'rgba(255,255,255,0.2)' }}>
-              Cerrar Sesión
-            </button>
-          </nav>
-        </div>
-      </header>
-
-      <main className="container" style={{ padding: '2rem 20px' }}>
-        <h1 style={{ marginBottom: '1rem' }}>Panel de Administración</h1>
+    <DashboardLayout user={user} title="Content Suite - Administrador" loading={loading}>
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold text-gray-900">Panel de Administración</h1>
         
-        <div className="grid grid-3" style={{ marginBottom: '2rem' }}>
-          <div className="card" style={{ textAlign: 'center' }}>
-            <h2 style={{ fontSize: '2rem', margin: 0, color: '#0066cc' }}>{stats.totalManuals}</h2>
-            <p style={{ color: '#666' }}>Manuales de Marca</p>
-          </div>
-          <div className="card" style={{ textAlign: 'center' }}>
-            <h2 style={{ fontSize: '2rem', margin: 0, color: '#ffc107' }}>{stats.pendientes}</h2>
-            <p style={{ color: '#666' }}>Contenidos Pendientes</p>
-          </div>
-          <div className="card" style={{ textAlign: 'center' }}>
-            <h2 style={{ fontSize: '2rem', margin: 0, color: '#28a745' }}>{stats.aprobados}</h2>
-            <p style={{ color: '#666' }}>Contenidos Aprobados</p>
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Card className="text-center">
+            <div className="text-3xl font-bold text-primary">{stats.totalManuals}</div>
+            <div className="text-gray-500 text-sm mt-1">Manuales de Marca</div>
+          </Card>
+          <Card className="text-center">
+            <div className="text-3xl font-bold text-warning">{stats.pendientes}</div>
+            <div className="text-gray-500 text-sm mt-1">Contenidos Pendientes</div>
+          </Card>
+          <Card className="text-center">
+            <div className="text-3xl font-bold text-success">{stats.aprobados}</div>
+            <div className="text-gray-500 text-sm mt-1">Contenidos Aprobados</div>
+          </Card>
         </div>
 
-        <div className="grid grid-2">
-          <div className="card">
-            <h2 style={{ marginBottom: '1rem' }}>Manuales de Marca</h2>
-            {manuals.length === 0 ? (
-              <p style={{ color: '#666' }}>No hay manuales</p>
-            ) : (
-              <div>
-                {manuals.map((manual) => (
-                  <div key={manual.id} style={{ padding: '0.75rem', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <strong>{manual.nombre}</strong>
-                      <p style={{ fontSize: '0.875rem', color: '#666' }}>{manual.producto}</p>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Manuales de Marca</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {manuals.length === 0 ? (
+                <p className="text-gray-500 text-center py-4">No hay manuales</p>
+              ) : (
+                <div className="space-y-2">
+                  {manuals.map((manual) => (
+                    <div key={manual.id} className="flex items-center justify-between p-3 border border-gray-100 rounded-lg">
+                      <div>
+                        <div className="font-medium text-gray-900">{manual.nombre}</div>
+                        <div className="text-sm text-gray-500">{manual.producto}</div>
+                      </div>
+                      <Button 
+                        onClick={() => handleDeleteManual(manual.id)}
+                        variant="danger"
+                        size="sm"
+                      >
+                        Eliminar
+                      </Button>
                     </div>
-                    <button 
-                      onClick={() => handleDeleteManual(manual.id)}
-                      className="btn btn-danger"
-                      style={{ padding: '0.25rem 0.5rem', fontSize: '0.875rem' }}
-                    >
-                      Eliminar
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-          <div className="card">
-            <h2 style={{ marginBottom: '1rem' }}>Estadísticas de Contenido</h2>
-            <div>
-              <div style={{ padding: '0.75rem', borderBottom: '1px solid #eee' }}>
-                <strong>Total: {stats.totalContenidos}</strong>
+          <Card>
+            <CardHeader>
+              <CardTitle>Estadísticas de Contenido</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <span className="font-medium">Total</span>
+                  <span className="font-bold">{stats.totalContenidos}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                  <span>Pendientes</span>
+                  <Badge variant="warning">{stats.pendientes}</Badge>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                  <span>Aprobados</span>
+                  <Badge variant="success">{stats.aprobados}</Badge>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                  <span>Rechazados</span>
+                  <Badge variant="danger">{stats.rechazados}</Badge>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <span>Auditorías realizadas</span>
+                  <span className="font-bold">{stats.auditorias}</span>
+                </div>
               </div>
-              <div style={{ padding: '0.75rem', borderBottom: '1px solid #eee' }}>
-                <span className="badge badge-pending">Pendientes: {stats.pendientes}</span>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Información del Sistema</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="text-gray-500">Backend API:</span>
+                <span className="ml-2 font-medium">http://localhost:8000</span>
               </div>
-              <div style={{ padding: '0.75rem', borderBottom: '1px solid #eee' }}>
-                <span className="badge badge-approved">Aprobados: {stats.aprobados}</span>
+              <div>
+                <span className="text-gray-500">Langfuse:</span>
+                <span className="ml-2">https://cloud.langfuse.com</span>
               </div>
-              <div style={{ padding: '0.75rem', borderBottom: '1px solid #eee' }}>
-                <span className="badge badge-rejected">Rechazados: {stats.rechazados}</span>
+              <div>
+                <span className="text-gray-500">Groq Cloud:</span>
+                <span className="ml-2">https://console.groq.com</span>
               </div>
-              <div style={{ padding: '0.75rem' }}>
-                <strong>Auditorías realizadas: {stats.auditorias}</strong>
+              <div>
+                <span className="text-gray-500">Google AI Studio:</span>
+                <span className="ml-2">https://aistudio.google.com</span>
               </div>
             </div>
-          </div>
-        </div>
-
-        <div className="card" style={{ marginTop: '1rem' }}>
-          <h2 style={{ marginBottom: '1rem' }}>Información del Sistema</h2>
-          <p><strong>Backend API:</strong> http://localhost:8000</p>
-          <p><strong>Langfuse:</strong> https://cloud.langfuse.com (configurable)</p>
-          <p><strong>Groq Cloud:</strong> https://console.groq.com</p>
-          <p><strong>Google AI Studio:</strong> https://aistudio.google.com</p>
-        </div>
-      </main>
-    </div>
+          </CardContent>
+        </Card>
+      </div>
+    </DashboardLayout>
   );
 }

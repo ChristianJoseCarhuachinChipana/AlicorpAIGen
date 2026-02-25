@@ -5,6 +5,19 @@ import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 import { authApi, brandApi, contenidoApi } from '@/lib/api';
 import { User, BrandManual, Contenido } from '@/types';
+import { 
+  DashboardLayout, 
+  Card, 
+  CardHeader, 
+  CardTitle, 
+  CardContent,
+  Button, 
+  Input, 
+  Textarea, 
+  Select,
+  Alert, 
+  StatusBadge 
+} from '@/components';
 
 export default function CreadorPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -103,210 +116,175 @@ export default function CreadorPage() {
     }
   };
 
-  const handleLogout = () => {
-    Cookies.remove('access_token');
-    router.push('/');
-  };
-
-  if (loading) return <div className="loading">Cargando...</div>;
-
   return (
-    <div>
-      <header className="header">
-        <div className="container header-content">
-          <div className="logo">Content Suite - Creador</div>
-          <nav className="nav">
-            <button onClick={() => router.push('/dashboard')} className="btn" style={{ background: 'rgba(255,255,255,0.2)' }}>
-              Inicio
-            </button>
-            <button onClick={handleLogout} className="btn" style={{ background: 'rgba(255,255,255,0.2)' }}>
-              Cerrar Sesión
-            </button>
-          </nav>
-        </div>
-      </header>
-
-      <main className="container" style={{ padding: '2rem 20px' }}>
-        <h1 style={{ marginBottom: '1rem' }}>Panel de Creador</h1>
+    <DashboardLayout user={user} title="Content Suite - Creador" loading={loading}>
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold text-gray-900">Panel de Creador</h1>
         
-        {error && <div className="error">{error}</div>}
-        {success && <div className="success">{success}</div>}
+        {error && <Alert variant="error" onClose={() => setError('')}>{error}</Alert>}
+        {success && <Alert variant="success" onClose={() => setSuccess('')}>{success}</Alert>}
 
-        <div style={{ marginBottom: '1rem' }}>
-          <button 
-            className={`btn ${activeTab === 'manuals' ? 'btn-primary' : 'btn-secondary'}`}
+        <div className="flex gap-2">
+          <Button 
+            variant={activeTab === 'manuals' ? 'primary' : 'secondary'}
             onClick={() => setActiveTab('manuals')}
           >
             Crear Manual de Marca
-          </button>
-          <button 
-            className={`btn ${activeTab === 'contenido' ? 'btn-primary' : 'btn-secondary'}`}
+          </Button>
+          <Button 
+            variant={activeTab === 'contenido' ? 'primary' : 'secondary'}
             onClick={() => setActiveTab('contenido')}
-            style={{ marginLeft: '0.5rem' }}
           >
             Generar Contenido
-          </button>
+          </Button>
         </div>
 
         {activeTab === 'manuals' && (
-          <div className="grid grid-2">
-            <div className="card">
-              <h2 style={{ marginBottom: '1rem' }}>Crear Nuevo Manual de Marca</h2>
-              <form onSubmit={handleCreateManual}>
-                <div className="form-group">
-                  <label className="form-label">Nombre del Manual</label>
-                  <input
-                    type="text"
-                    className="form-input"
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Crear Nuevo Manual de Marca</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleCreateManual} className="space-y-4">
+                  <Input
+                    label="Nombre del Manual"
                     value={manualForm.nombre}
                     onChange={(e) => setManualForm({ ...manualForm, nombre: e.target.value })}
                     required
                     placeholder="ej. Snack Saludable Quinua"
                   />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Producto/Servicio</label>
-                  <input
-                    type="text"
-                    className="form-input"
+                  <Input
+                    label="Producto/Servicio"
                     value={manualForm.producto}
                     onChange={(e) => setManualForm({ ...manualForm, producto: e.target.value })}
                     required
                     placeholder="ej. Snack de quinua orgánico"
                   />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Tono de Comunicación</label>
-                  <input
-                    type="text"
-                    className="form-input"
+                  <Input
+                    label="Tono de Comunicación"
                     value={manualForm.tono}
                     onChange={(e) => setManualForm({ ...manualForm, tono: e.target.value })}
                     required
                     placeholder="ej. Divertido pero profesional"
                   />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Público Objetivo</label>
-                  <input
-                    type="text"
-                    className="form-input"
+                  <Input
+                    label="Público Objetivo"
                     value={manualForm.público_objetivo}
                     onChange={(e) => setManualForm({ ...manualForm, público_objetivo: e.target.value })}
                     required
                     placeholder="ej. Gen Z, jóvenes profesionales"
                   />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Restricciones</label>
-                  <textarea
-                    className="form-textarea"
+                  <Textarea
+                    label="Restricciones"
                     value={manualForm.restricciones}
                     onChange={(e) => setManualForm({ ...manualForm, restricciones: e.target.value })}
                     placeholder="ej. Prohibido usar tecnicismos, evitar colores oscuros"
                   />
-                </div>
-                <button type="submit" className="btn btn-primary" disabled={creatingManual}>
-                  {creatingManual ? 'Generando...' : 'Generar Manual de Marca'}
-                </button>
-              </form>
-            </div>
+                  <Button type="submit" disabled={creatingManual} className="w-full">
+                    {creatingManual ? 'Generando...' : 'Generar Manual de Marca'}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
 
-            <div className="card">
-              <h2 style={{ marginBottom: '1rem' }}>Manuales Existentes</h2>
-              {manuals.length === 0 ? (
-                <p style={{ color: '#666' }}>No hay manuales creados aún</p>
-              ) : (
-                <div>
-                  {manuals.map((manual) => (
-                    <div key={manual.id} style={{ padding: '0.75rem', borderBottom: '1px solid #eee' }}>
-                      <strong>{manual.nombre}</strong>
-                      <p style={{ fontSize: '0.875rem', color: '#666' }}>{manual.producto}</p>
-                      <p style={{ fontSize: '0.875rem', color: '#666' }}>Tono: {manual.tono}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Manuales Existentes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {manuals.length === 0 ? (
+                  <p className="text-gray-500 text-center py-4">No hay manuales creados aún</p>
+                ) : (
+                  <div className="space-y-3">
+                    {manuals.map((manual) => (
+                      <div key={manual.id} className="p-3 border border-gray-100 rounded-lg">
+                        <div className="font-semibold text-gray-900">{manual.nombre}</div>
+                        <p className="text-sm text-gray-500">{manual.producto}</p>
+                        <p className="text-sm text-gray-400">Tono: {manual.tono}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         )}
 
         {activeTab === 'contenido' && (
-          <div className="grid grid-2">
-            <div className="card">
-              <h2 style={{ marginBottom: '1rem' }}>Generar Nuevo Contenido</h2>
-              <form onSubmit={handleCreateContent}>
-                <div className="form-group">
-                  <label className="form-label">Manual de Marca</label>
-                  <select
-                    className="form-select"
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Generar Nuevo Contenido</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleCreateContent} className="space-y-4">
+                  <Select
+                    label="Manual de Marca"
                     value={contentForm.brand_manual_id}
                     onChange={(e) => setContentForm({ ...contentForm, brand_manual_id: e.target.value })}
                     required
-                  >
-                    <option value="">Seleccionar manual...</option>
-                    {manuals.map((manual) => (
-                      <option key={manual.id} value={manual.id}>
-                        {manual.nombre} - {manual.producto}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Tipo de Contenido</label>
-                  <select
-                    className="form-select"
+                    placeholder="Seleccionar manual..."
+                    options={manuals.map((m) => ({ value: m.id, label: `${m.nombre} - ${m.producto}` }))}
+                  />
+                  <Select
+                    label="Tipo de Contenido"
                     value={contentForm.tipo}
                     onChange={(e) => setContentForm({ ...contentForm, tipo: e.target.value })}
-                  >
-                    <option value="descripcion">Descripción de Producto</option>
-                    <option value="guion_video">Guión de Video</option>
-                    <option value="prompt_imagen">Prompt de Imagen</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Título</label>
-                  <input
-                    type="text"
-                    className="form-input"
+                    options={[
+                      { value: 'descripcion', label: 'Descripción de Producto' },
+                      { value: 'guion_video', label: 'Guión de Video' },
+                      { value: 'prompt_imagen', label: 'Prompt de Imagen' },
+                    ]}
+                  />
+                  <Input
+                    label="Título"
                     value={contentForm.titulo}
                     onChange={(e) => setContentForm({ ...contentForm, titulo: e.target.value })}
                     required
                     placeholder="ej. Snack de quinua crujiente"
                   />
-                </div>
-                <button type="submit" className="btn btn-primary" disabled={creatingContent || manuals.length === 0}>
-                  {creatingContent ? 'Generando...' : 'Generar Contenido'}
-                </button>
-              </form>
-            </div>
+                  <Button 
+                    type="submit" 
+                    disabled={creatingContent || manuals.length === 0} 
+                    className="w-full"
+                  >
+                    {creatingContent ? 'Generando...' : 'Generar Contenido'}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
 
-            <div className="card">
-              <h2 style={{ marginBottom: '1rem' }}>Contenido Generado</h2>
-              {contenidos.length === 0 ? (
-                <p style={{ color: '#666' }}>No hay contenido generado aún</p>
-              ) : (
-                <div>
-                  {contenidos.map((item) => (
-                    <div key={item.id} style={{ padding: '0.75rem', borderBottom: '1px solid #eee' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <strong>{item.titulo}</strong>
-                        <span className={`badge badge-${item.estado}`}>{item.estado}</span>
+            <Card>
+              <CardHeader>
+                <CardTitle>Contenido Generado</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {contenidos.length === 0 ? (
+                  <p className="text-gray-500 text-center py-4">No hay contenido generado aún</p>
+                ) : (
+                  <div className="space-y-3">
+                    {contenidos.map((item) => (
+                      <div key={item.id} className="p-3 border border-gray-100 rounded-lg">
+                        <div className="flex items-center justify-between">
+                          <span className="font-semibold text-gray-900">{item.titulo}</span>
+                          <StatusBadge status={item.estado} />
+                        </div>
+                        <p className="text-sm text-gray-500 mt-1">Tipo: {item.tipo}</p>
+                        {item.contenido_text && (
+                          <p className="text-sm text-gray-400 mt-2 line-clamp-2">
+                            {item.contenido_text.substring(0, 150)}...
+                          </p>
+                        )}
                       </div>
-                      <p style={{ fontSize: '0.875rem', color: '#666' }}>Tipo: {item.tipo}</p>
-                      {item.contenido_text && (
-                        <p style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>
-                          {item.contenido_text.substring(0, 150)}...
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         )}
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

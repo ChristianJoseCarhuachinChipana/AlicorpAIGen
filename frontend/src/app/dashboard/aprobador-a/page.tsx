@@ -5,6 +5,18 @@ import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 import { authApi, contenidoApi } from '@/lib/api';
 import { User, Contenido } from '@/types';
+import { 
+  DashboardLayout, 
+  Card, 
+  CardHeader, 
+  CardTitle, 
+  CardContent,
+  Button, 
+  Textarea,
+  Alert, 
+  StatusBadge,
+  Badge 
+} from '@/components';
 
 export default function AprobadorAPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -85,147 +97,135 @@ export default function AprobadorAPage() {
     }
   };
 
-  const handleLogout = () => {
-    Cookies.remove('access_token');
-    router.push('/');
-  };
-
-  if (loading) return <div className="loading">Cargando...</div>;
-
   const pendingContents = contenidos.filter(c => c.estado === 'pendiente');
 
   return (
-    <div>
-      <header className="header">
-        <div className="container header-content">
-          <div className="logo">Content Suite - Aprobador A</div>
-          <nav className="nav">
-            <button onClick={() => router.push('/dashboard')} className="btn" style={{ background: 'rgba(255,255,255,0.2)' }}>
-              Inicio
-            </button>
-            <button onClick={handleLogout} className="btn" style={{ background: 'rgba(255,255,255,0.2)' }}>
-              Cerrar Sesión
-            </button>
-          </nav>
-        </div>
-      </header>
-
-      <main className="container" style={{ padding: '2rem 20px' }}>
-        <h1 style={{ marginBottom: '1rem' }}>Panel de Aprobación de Contenido</h1>
+    <DashboardLayout user={user} title="Content Suite - Aprobador A" loading={loading}>
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold text-gray-900">Panel de Aprobación de Contenido</h1>
         
-        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
-          <div className="card" style={{ flex: 1, textAlign: 'center' }}>
-            <h2 style={{ fontSize: '2rem', margin: 0 }}>{pendingContents.length}</h2>
-            <p style={{ color: '#666' }}>Pendientes</p>
-          </div>
-          <div className="card" style={{ flex: 1, textAlign: 'center' }}>
-            <h2 style={{ fontSize: '2rem', margin: 0 }}>{contenidos.filter(c => c.estado === 'aprobado').length}</h2>
-            <p style={{ color: '#666' }}>Aprobados</p>
-          </div>
-          <div className="card" style={{ flex: 1, textAlign: 'center' }}>
-            <h2 style={{ fontSize: '2rem', margin: 0 }}>{contenidos.filter(c => c.estado === 'rechazado').length}</h2>
-            <p style={{ color: '#666' }}>Rechazados</p>
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Card className="text-center">
+            <div className="text-3xl font-bold text-warning">{pendingContents.length}</div>
+            <div className="text-gray-500 text-sm mt-1">Pendientes</div>
+          </Card>
+          <Card className="text-center">
+            <div className="text-3xl font-bold text-success">{contenidos.filter(c => c.estado === 'aprobado').length}</div>
+            <div className="text-gray-500 text-sm mt-1">Aprobados</div>
+          </Card>
+          <Card className="text-center">
+            <div className="text-3xl font-bold text-danger">{contenidos.filter(c => c.estado === 'rechazado').length}</div>
+            <div className="text-gray-500 text-sm mt-1">Rechazados</div>
+          </Card>
         </div>
 
-        {error && <div className="error">{error}</div>}
-        {success && <div className="success">{success}</div>}
+        {error && <Alert variant="error" onClose={() => setError('')}>{error}</Alert>}
+        {success && <Alert variant="success" onClose={() => setSuccess('')}>{success}</Alert>}
 
-        <div className="grid grid-2">
-          <div className="card">
-            <h2 style={{ marginBottom: '1rem' }}>Contenido Pendiente de Aprobación</h2>
-            {pendingContents.length === 0 ? (
-              <p style={{ color: '#666' }}>No hay contenido pendiente</p>
-            ) : (
-              <div>
-                {pendingContents.map((item) => (
-                  <div 
-                    key={item.id} 
-                    onClick={() => setSelectedContent(item)}
-                    style={{ 
-                      padding: '0.75rem', 
-                      borderBottom: '1px solid #eee',
-                      cursor: 'pointer',
-                      background: selectedContent?.id === item.id ? '#f0f0f0' : 'transparent'
-                    }}
-                  >
-                    <strong>{item.titulo}</strong>
-                    <p style={{ fontSize: '0.875rem', color: '#666' }}>Tipo: {item.tipo}</p>
-                    <p style={{ fontSize: '0.75rem', color: '#999' }}>
-                      {new Date(item.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="card">
-            <h2 style={{ marginBottom: '1rem' }}>Detalles del Contenido</h2>
-            {selectedContent ? (
-              <div>
-                <p><strong>Título:</strong> {selectedContent.titulo}</p>
-                <p><strong>Tipo:</strong> {selectedContent.tipo}</p>
-                <p><strong>Estado:</strong> <span className={`badge badge-${selectedContent.estado}`}>{selectedContent.estado}</span></p>
-                <div style={{ marginTop: '1rem' }}>
-                  <strong>Contenido:</strong>
-                  <div style={{ 
-                    marginTop: '0.5rem', 
-                    padding: '1rem', 
-                    background: '#f8f9fa', 
-                    borderRadius: '4px',
-                    whiteSpace: 'pre-wrap',
-                    maxHeight: '300px',
-                    overflow: 'auto'
-                  }}>
-                    {selectedContent.contenido_text || 'Sin contenido'}
-                  </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Contenido Pendiente de Aprobación</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {pendingContents.length === 0 ? (
+                <p className="text-gray-500 text-center py-4">No hay contenido pendiente</p>
+              ) : (
+                <div className="space-y-2">
+                  {pendingContents.map((item) => (
+                    <div 
+                      key={item.id} 
+                      onClick={() => setSelectedContent(item)}
+                      className={`
+                        p-3 rounded-lg cursor-pointer transition-all duration-200
+                        ${selectedContent?.id === item.id 
+                          ? 'bg-primary/10 border border-primary/30' 
+                          : 'border border-gray-100 hover:border-gray-200'}
+                      `}
+                    >
+                      <div className="font-semibold text-gray-900">{item.titulo}</div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-sm text-gray-500">Tipo: {item.tipo}</span>
+                        <span className="text-gray-300">•</span>
+                        <span className="text-xs text-gray-400">
+                          {new Date(item.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
+              )}
+            </CardContent>
+          </Card>
 
-                {selectedContent.estado === 'pendiente' && (
-                  <div style={{ marginTop: '1rem' }}>
-                    <button 
-                      onClick={() => handleApprove(selectedContent.id)}
-                      className="btn btn-success"
-                      disabled={processing}
-                      style={{ marginRight: '0.5rem' }}
-                    >
-                      Aprobar
-                    </button>
-                    <button 
-                      onClick={() => handleReject(selectedContent.id)}
-                      className="btn btn-danger"
-                      disabled={processing}
-                    >
-                      Rechazar
-                    </button>
-                    
-                    <div style={{ marginTop: '1rem' }}>
-                      <label className="form-label">Motivo de rechazo:</label>
-                      <textarea
-                        className="form-textarea"
+          <Card>
+            <CardHeader>
+              <CardTitle>Detalles del Contenido</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {selectedContent ? (
+                <div className="space-y-4">
+                  <div>
+                    <span className="text-sm text-gray-500">Título:</span>
+                    <span className="ml-2 font-medium">{selectedContent.titulo}</span>
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-500">Tipo:</span>
+                    <span className="ml-2">{selectedContent.tipo}</span>
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-500">Estado:</span>
+                    <span className="ml-2"><StatusBadge status={selectedContent.estado} /></span>
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-500 block mb-2">Contenido:</span>
+                    <div className="p-3 bg-gray-50 rounded-lg max-h-64 overflow-auto text-sm whitespace-pre-wrap">
+                      {selectedContent.contenido_text || 'Sin contenido'}
+                    </div>
+                  </div>
+
+                  {selectedContent.estado === 'pendiente' && (
+                    <div className="space-y-3 pt-4 border-t">
+                      <div className="flex gap-2">
+                        <Button 
+                          onClick={() => handleApprove(selectedContent.id)}
+                          variant="success"
+                          disabled={processing}
+                        >
+                          Aprobar
+                        </Button>
+                        <Button 
+                          onClick={() => handleReject(selectedContent.id)}
+                          variant="danger"
+                          disabled={processing}
+                        >
+                          Rechazar
+                        </Button>
+                      </div>
+                      <Textarea
+                        label="Motivo de rechazo:"
                         value={rejectReason}
                         onChange={(e) => setRejectReason(e.target.value)}
                         placeholder="Ingrese el motivo del rechazo..."
                         rows={3}
                       />
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {selectedContent.rechazo_razon && (
-                  <div style={{ marginTop: '1rem', padding: '0.75rem', background: '#f8d7da', borderRadius: '4px' }}>
-                    <strong>Motivo de rechazo:</strong>
-                    <p>{selectedContent.rechazo_razon}</p>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <p style={{ color: '#666' }}>Seleccione un contenido para ver los detalles</p>
-            )}
-          </div>
+                  {selectedContent.rechazo_razon && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                      <span className="text-sm font-medium text-red-800">Motivo de rechazo:</span>
+                      <p className="text-sm text-red-700 mt-1">{selectedContent.rechazo_razon}</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-gray-500 text-center py-4">Seleccione un contenido para ver los detalles</p>
+              )}
+            </CardContent>
+          </Card>
         </div>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
