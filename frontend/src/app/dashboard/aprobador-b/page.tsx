@@ -29,6 +29,7 @@ export default function AprobadorBPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [expandedAuditoria, setExpandedAuditoria] = useState<string | null>(null);
+  const [imagenesCache, setImagenesCache] = useState<Record<string, string>>({});
   const router = useRouter();
 
   useEffect(() => {
@@ -94,6 +95,29 @@ export default function AprobadorBPage() {
     if (score >= 0.7) return 'text-success';
     if (score >= 0.4) return 'text-warning';
     return 'text-danger';
+  };
+
+  const loadImagenAuditoria = async (auditoriaId: string) => {
+    if (imagenesCache[auditoriaId]) {
+      return imagenesCache[auditoriaId];
+    }
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/auditoria/${auditoriaId}/imagen`, {
+        headers: {
+          'Authorization': `Bearer ${Cookies.get('access_token')}`
+        }
+      });
+      if (response.ok) {
+        let imagenBase64 = await response.text();
+        imagenBase64 = imagenBase64.replace(/^"|"$/g, '');
+        setImagenesCache(prev => ({ ...prev, [auditoriaId]: imagenBase64 }));
+        return imagenBase64;
+      }
+      return null;
+    } catch (err) {
+      console.error('Error loading imagen:', err);
+      return null;
+    }
   };
 
   return (
@@ -226,22 +250,78 @@ export default function AprobadorBPage() {
                           </div>
                         </div>
                         {isExpanded && (
-                          <div className="p-3 bg-gray-50 border-t border-gray-100">
-                            <div className={`p-3 rounded-lg ${(aud.score_conformidad || 0) >= 0.7 ? 'bg-green-50' : 'bg-red-50'}`}>
-                              <p className="text-sm">
-                                <span className="font-medium">Score de Conformidad: </span>
-                                <span className={getScoreClass(aud.score_conformidad || 0)}>
-                                  {((aud.score_conformidad || 0) * 100).toFixed(0)}%
-                                </span>
-                              </p>
-                              {aud.gemini_analysis && (
-                                <div className="mt-2">
-                                  <span className="text-sm font-medium">Análisis:</span>
-                                  <pre className="mt-1 text-sm whitespace-pre-wrap text-gray-700">
-                                    {aud.gemini_analysis}
-                                  </pre>
+                          <div className="p-3 bg-gray-50 border-t border-gray-100 space-y-4 max-h-96 overflow-y-auto">
+                            {content && (
+                              <div>
+                                <h4 className="text-sm font-medium text-gray-700 mb-2">Contenido Auditado</h4>
+                                <div className="p-3 bg-white rounded-lg border border-gray-200">
+                                  <p className="font-medium text-gray-900">{content.titulo}</p>
+                                  <p className="text-sm text-gray-500">Tipo: {content.tipo}</p>
+                                  {content.contenido_text && (
+                                    <div className="mt-2 text-sm text-gray-600">
+                                      <span className="font-medium">Contenido:</span>
+                                      <div className="mt-1 max-h-32 overflow-y-auto p-2 bg-gray-50 rounded">
+                                        <p className="whitespace-pre-wrap">{content.contenido_text}</p>
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
-                              )}
+                              </div>
+                            )}
+                            
+                            <div>
+                              <h4 className="text-sm font-medium text-gray-700 mb-2">Imagen Auditada</h4>
+                              <div className="p-3 bg-white rounded-lg border border-gray-200">
+                                <div className="w-full overflow-hidden rounded-lg bg-gray-100 flex items-center justify-center min-h-[100px]">
+                                  {imagenesCache[aud.id] ? (
+                                    <img 
+                                      src={imagenesCache[aud.id]} 
+                                      alt="Auditada" 
+                                      className="max-w-full h-auto max-h-64 object-contain"
+                                    />
+                                  ) : (
+                                    <Button
+                                      onClick={async () => await loadImagenAuditoria(aud.id)}
+                                      variant="outline"
+                                      size="sm"
+                                    >
+                                      Cargar Imagen
+                                    </Button>
+                                  )}
+                                </div>
+                                {imagenesCache[aud.id] && (
+                                  <a 
+                                    href={imagenesCache[aud.id]} 
+                                    download={`auditoria-${aud.id}.jpg`}
+                                    className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary-dark transition-colors mt-2"
+                                  >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                    </svg>
+                                    Descargar Imagen
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <h4 className="text-sm font-medium text-gray-700 mb-2">Resultado del Análisis</h4>
+                              <div className={`p-3 rounded-lg ${(aud.score_conformidad || 0) >= 0.7 ? 'bg-green-50' : 'bg-red-50'}`}>
+                                <p className="text-sm">
+                                  <span className="font-medium">Score de Conformidad: </span>
+                                  <span className={getScoreClass(aud.score_conformidad || 0)}>
+                                    {((aud.score_conformidad || 0) * 100).toFixed(0)}%
+                                  </span>
+                                </p>
+                                {aud.gemini_analysis && (
+                                  <div className="mt-2">
+                                    <span className="text-sm font-medium">Análisis:</span>
+                                    <pre className="mt-1 text-sm whitespace-pre-wrap text-gray-700 max-h-32 overflow-y-auto">
+                                      {aud.gemini_analysis}
+                                    </pre>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
                         )}
