@@ -255,7 +255,7 @@ export default function CreadorPage() {
                 {contenidos.length === 0 ? (
                   <p className="text-gray-500 text-center py-4">No hay contenido generado aún</p>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
                     {contenidos.map((item) => (
                       <div key={item.id} className="p-3 border border-gray-100 rounded-lg">
                         <div className="flex items-center justify-between">
@@ -264,9 +264,11 @@ export default function CreadorPage() {
                         </div>
                         <p className="text-sm text-gray-500 mt-1">Tipo: {item.tipo}</p>
                         {item.contenido_text && (
-                          <p className="text-sm text-gray-400 mt-2 line-clamp-2">
-                            {item.contenido_text.substring(0, 150)}...
-                          </p>
+                          <div className="mt-2 max-h-[150px] overflow-y-auto pr-2 text-xs border-t pt-2">
+                            <pre className="whitespace-pre-wrap text-gray-500 font-mono">
+                              {item.contenido_text}
+                            </pre>
+                          </div>
                         )}
                       </div>
                     ))}
