@@ -42,25 +42,37 @@ export function ManualList({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
       {manuales.map((manual) => (
         <div 
           key={manual.id} 
-          className="p-3 border border-gray-100 rounded-lg flex items-center justify-between"
+          className="p-3 border border-gray-100 rounded-lg"
         >
-          <div>
-            <div className="font-semibold text-gray-900">{manual.nombre}</div>
-            <p className="text-sm text-gray-500">{manual.producto}</p>
-            <p className="text-sm text-gray-400">Tono: {manual.tono}</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="font-semibold text-gray-900">{manual.nombre}</div>
+              <p className="text-sm text-gray-500">{manual.producto}</p>
+              <p className="text-sm text-gray-400">Tono: {manual.tono}</p>
+            </div>
+            {onDelete && (
+              <Button 
+                onClick={() => onDelete(manual.id)}
+                variant="danger"
+                size="sm"
+              >
+                Eliminar
+              </Button>
+            )}
           </div>
-          {onDelete && (
-            <Button 
-              onClick={() => onDelete(manual.id)}
-              variant="danger"
-              size="sm"
-            >
-              Eliminar
-            </Button>
+          
+          {manual.contenido_markdown && (
+            <div className="mt-3 pt-2 border-t">
+              <div className="max-h-[200px] overflow-y-auto pr-2">
+                <pre className="whitespace-pre-wrap text-xs text-gray-600 font-mono">
+                  {manual.contenido_markdown}
+                </pre>
+              </div>
+            </div>
           )}
         </div>
       ))}

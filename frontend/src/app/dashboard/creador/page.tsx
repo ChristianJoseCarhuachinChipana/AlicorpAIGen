@@ -1,30 +1,34 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import axios from 'axios';
-import { brandApi, contenidoApi } from '@/lib/api';
-import { BrandManual, Contenido } from '@/types';
-import { 
-  DashboardLayout, 
-  Card, 
-  CardHeader, 
-  CardTitle, 
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import axios from "axios";
+import { brandApi, contenidoApi } from "@/lib/api";
+import { BrandManual, Contenido } from "@/types";
+import {
+  DashboardLayout,
+  Card,
+  CardHeader,
+  CardTitle,
   CardContent,
-  Button, 
-  Input, 
-  Textarea, 
+  Button,
+  Input,
+  Textarea,
   Select,
-  Alert, 
-  StatusBadge 
-} from '@/components';
-import { ManualList } from '@/components/dashboard';
-import { useAuth } from '@/hooks';
+  Alert,
+  StatusBadge,
+} from "@/components";
+import { ManualList } from "@/components/dashboard";
+import { useAuth } from "@/hooks";
 
-const ALLOWED_ROLES = ['creador', 'admin'] as const;
+const ALLOWED_ROLES = ["creador", "admin"] as const;
 
 export default function CreadorPage() {
-  const { user, loading: authLoading, logout } = useAuth({
+  const {
+    user,
+    loading: authLoading,
+    logout,
+  } = useAuth({
     allowedRoles: ALLOWED_ROLES,
   });
   const router = useRouter();
@@ -32,36 +36,38 @@ export default function CreadorPage() {
   const [manuals, setManuals] = useState<BrandManual[]>([]);
   const [contenidos, setContenidos] = useState<Contenido[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'manuals' | 'contenido'>('manuals');
+  const [activeTab, setActiveTab] = useState<"manuals" | "contenido">(
+    "manuals",
+  );
   const [creatingManual, setCreatingManual] = useState(false);
   const [creatingContent, setCreatingContent] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const [manualForm, setManualForm] = useState({
-    nombre: '',
-    producto: '',
-    tono: '',
-    público_objetivo: '',
-    restricciones: ''
+    nombre: "",
+    producto: "",
+    tono: "",
+    público_objetivo: "",
+    restricciones: "",
   });
 
   const [contentForm, setContentForm] = useState({
-    brand_manual_id: '',
-    tipo: 'descripcion',
-    titulo: ''
+    brand_manual_id: "",
+    tipo: "descripcion",
+    titulo: "",
   });
 
   const loadData = async () => {
     try {
       const [manualsData, contenidoData] = await Promise.all([
         brandApi.listManuals(),
-        contenidoApi.list()
+        contenidoApi.list(),
       ]);
       setManuals(manualsData);
       setContenidos(contenidoData);
     } catch (err) {
-      console.error('Error loading data:', err);
+      console.error("Error loading data:", err);
     } finally {
       setLoading(false);
     }
@@ -75,16 +81,23 @@ export default function CreadorPage() {
 
   const handleCreateManual = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setCreatingManual(true);
 
     try {
       await brandApi.createManual(manualForm);
-      setSuccess('Manual de marca creado correctamente');
-      setManualForm({ nombre: '', producto: '', tono: '', público_objetivo: '', restricciones: '' });
+      setSuccess("Manual de marca creado correctamente");
+      setManualForm({
+        nombre: "",
+        producto: "",
+        tono: "",
+        público_objetivo: "",
+        restricciones: "",
+      });
       loadData();
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Error al crear manual';
+      const errorMessage =
+        err instanceof Error ? err.message : "Error al crear manual";
       setError(errorMessage);
     } finally {
       setCreatingManual(false);
@@ -93,22 +106,24 @@ export default function CreadorPage() {
 
   const handleCreateContent = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setCreatingContent(true);
 
     try {
       const result = await contenidoApi.create(contentForm);
-      console.log('Contenido creado:', result);
-      setSuccess('Contenido generado correctamente');
-      setContentForm({ brand_manual_id: '', tipo: 'descripcion', titulo: '' });
+      console.log("Contenido creado:", result);
+      setSuccess("Contenido generado correctamente");
+      setContentForm({ brand_manual_id: "", tipo: "descripcion", titulo: "" });
       loadData();
     } catch (err: unknown) {
-      console.error('Error al crear contenido:', err);
+      console.error("Error al crear contenido:", err);
       if (axios.isAxiosError(err) && err.response) {
-        const errorMessage = err.response.data?.detail || 'Error al generar contenido';
+        const errorMessage =
+          err.response.data?.detail || "Error al generar contenido";
         setError(errorMessage);
       } else {
-        const errorMessage = err instanceof Error ? err.message : 'Error al generar contenido';
+        const errorMessage =
+          err instanceof Error ? err.message : "Error al generar contenido";
         setError(errorMessage);
       }
     } finally {
@@ -117,29 +132,41 @@ export default function CreadorPage() {
   };
 
   return (
-    <DashboardLayout user={user} title="Content Suite - Creador" loading={authLoading}>
+    <DashboardLayout
+      user={user}
+      title="Content Suite - Creador"
+      loading={authLoading}
+    >
       <div className="space-y-6">
         <h1 className="text-2xl font-bold text-gray-900">Panel de Creador</h1>
-        
-        {error && <Alert variant="error" onClose={() => setError('')}>{error}</Alert>}
-        {success && <Alert variant="success" onClose={() => setSuccess('')}>{success}</Alert>}
+
+        {error && (
+          <Alert variant="error" onClose={() => setError("")}>
+            {error}
+          </Alert>
+        )}
+        {success && (
+          <Alert variant="success" onClose={() => setSuccess("")}>
+            {success}
+          </Alert>
+        )}
 
         <div className="flex gap-2">
-          <Button 
-            variant={activeTab === 'manuals' ? 'primary' : 'secondary'}
-            onClick={() => setActiveTab('manuals')}
+          <Button
+            variant={activeTab === "manuals" ? "primary" : "secondary"}
+            onClick={() => setActiveTab("manuals")}
           >
             Crear Manual de Marca
           </Button>
-          <Button 
-            variant={activeTab === 'contenido' ? 'primary' : 'secondary'}
-            onClick={() => setActiveTab('contenido')}
+          <Button
+            variant={activeTab === "contenido" ? "primary" : "secondary"}
+            onClick={() => setActiveTab("contenido")}
           >
             Generar Contenido
           </Button>
         </div>
 
-        {activeTab === 'manuals' && (
+        {activeTab === "manuals" && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
@@ -150,39 +177,61 @@ export default function CreadorPage() {
                   <Input
                     label="Nombre del Manual"
                     value={manualForm.nombre}
-                    onChange={(e) => setManualForm({ ...manualForm, nombre: e.target.value })}
+                    onChange={(e) =>
+                      setManualForm({ ...manualForm, nombre: e.target.value })
+                    }
                     required
                     placeholder="ej. Snack Saludable Quinua"
                   />
                   <Input
                     label="Producto/Servicio"
                     value={manualForm.producto}
-                    onChange={(e) => setManualForm({ ...manualForm, producto: e.target.value })}
+                    onChange={(e) =>
+                      setManualForm({ ...manualForm, producto: e.target.value })
+                    }
                     required
                     placeholder="ej. Snack de quinua orgánico"
                   />
                   <Input
                     label="Tono de Comunicación"
                     value={manualForm.tono}
-                    onChange={(e) => setManualForm({ ...manualForm, tono: e.target.value })}
+                    onChange={(e) =>
+                      setManualForm({ ...manualForm, tono: e.target.value })
+                    }
                     required
                     placeholder="ej. Divertido pero profesional"
                   />
                   <Input
                     label="Público Objetivo"
                     value={manualForm.público_objetivo}
-                    onChange={(e) => setManualForm({ ...manualForm, público_objetivo: e.target.value })}
+                    onChange={(e) =>
+                      setManualForm({
+                        ...manualForm,
+                        público_objetivo: e.target.value,
+                      })
+                    }
                     required
                     placeholder="ej. Gen Z, jóvenes profesionales"
                   />
                   <Textarea
                     label="Restricciones"
                     value={manualForm.restricciones}
-                    onChange={(e) => setManualForm({ ...manualForm, restricciones: e.target.value })}
+                    onChange={(e) =>
+                      setManualForm({
+                        ...manualForm,
+                        restricciones: e.target.value,
+                      })
+                    }
                     placeholder="ej. Prohibido usar tecnicismos, evitar colores oscuros"
                   />
-                  <Button type="submit" disabled={creatingManual} className="w-full">
-                    {creatingManual ? 'Generando...' : 'Generar Manual de Marca'}
+                  <Button
+                    type="submit"
+                    disabled={creatingManual}
+                    className="w-full"
+                  >
+                    {creatingManual
+                      ? "Generando..."
+                      : "Generar Manual de Marca"}
                   </Button>
                 </form>
               </CardContent>
@@ -193,8 +242,8 @@ export default function CreadorPage() {
                 <CardTitle>Manuales Existentes</CardTitle>
               </CardHeader>
               <CardContent>
-                <ManualList 
-                  manuales={manuals} 
+                <ManualList
+                  manuales={manuals}
                   loading={loading}
                   emptyMessage="No hay manuales creados aún"
                 />
@@ -203,7 +252,7 @@ export default function CreadorPage() {
           </div>
         )}
 
-        {activeTab === 'contenido' && (
+        {activeTab === "contenido" && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
@@ -214,34 +263,49 @@ export default function CreadorPage() {
                   <Select
                     label="Manual de Marca"
                     value={contentForm.brand_manual_id}
-                    onChange={(e) => setContentForm({ ...contentForm, brand_manual_id: e.target.value })}
+                    onChange={(e) =>
+                      setContentForm({
+                        ...contentForm,
+                        brand_manual_id: e.target.value,
+                      })
+                    }
                     required
                     placeholder="Seleccionar manual..."
-                    options={manuals.map((m) => ({ value: m.id, label: `${m.nombre} - ${m.producto}` }))}
+                    options={manuals.map((m) => ({
+                      value: m.id,
+                      label: `${m.nombre} - ${m.producto}`,
+                    }))}
                   />
                   <Select
                     label="Tipo de Contenido"
                     value={contentForm.tipo}
-                    onChange={(e) => setContentForm({ ...contentForm, tipo: e.target.value })}
+                    onChange={(e) =>
+                      setContentForm({ ...contentForm, tipo: e.target.value })
+                    }
                     options={[
-                      { value: 'descripcion', label: 'Descripción de Producto' },
-                      { value: 'guion_video', label: 'Guión de Video' },
-                      { value: 'prompt_imagen', label: 'Prompt de Imagen' },
+                      {
+                        value: "descripcion",
+                        label: "Descripción de Producto",
+                      },
+                      { value: "guion_video", label: "Guión de Video" },
+                      { value: "prompt_imagen", label: "Prompt de Imagen" },
                     ]}
                   />
                   <Input
                     label="Título"
                     value={contentForm.titulo}
-                    onChange={(e) => setContentForm({ ...contentForm, titulo: e.target.value })}
+                    onChange={(e) =>
+                      setContentForm({ ...contentForm, titulo: e.target.value })
+                    }
                     required
                     placeholder="ej. Snack de quinua crujiente"
                   />
-                  <Button 
-                    type="submit" 
-                    disabled={creatingContent || manuals.length === 0} 
+                  <Button
+                    type="submit"
+                    disabled={creatingContent || manuals.length === 0}
                     className="w-full"
                   >
-                    {creatingContent ? 'Generando...' : 'Generar Contenido'}
+                    {creatingContent ? "Generando..." : "Generar Contenido"}
                   </Button>
                 </form>
               </CardContent>
@@ -253,16 +317,25 @@ export default function CreadorPage() {
               </CardHeader>
               <CardContent>
                 {contenidos.length === 0 ? (
-                  <p className="text-gray-500 text-center py-4">No hay contenido generado aún</p>
+                  <p className="text-gray-500 text-center py-4">
+                    No hay contenido generado aún
+                  </p>
                 ) : (
                   <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
                     {contenidos.map((item) => (
-                      <div key={item.id} className="p-3 border border-gray-100 rounded-lg">
+                      <div
+                        key={item.id}
+                        className="p-3 border border-gray-100 rounded-lg"
+                      >
                         <div className="flex items-center justify-between">
-                          <span className="font-semibold text-gray-900">{item.titulo}</span>
+                          <span className="font-semibold text-gray-900">
+                            {item.titulo}
+                          </span>
                           <StatusBadge status={item.estado} />
                         </div>
-                        <p className="text-sm text-gray-500 mt-1">Tipo: {item.tipo}</p>
+                        <p className="text-sm text-gray-500 mt-1">
+                          Tipo: {item.tipo}
+                        </p>
                         {item.contenido_text && (
                           <div className="mt-2 max-h-[150px] overflow-y-auto pr-2 text-xs border-t pt-2">
                             <pre className="whitespace-pre-wrap text-gray-500 font-mono">
