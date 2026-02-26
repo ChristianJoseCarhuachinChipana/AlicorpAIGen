@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import axios from 'axios';
 import { brandApi, contenidoApi } from '@/lib/api';
 import { BrandManual, Contenido } from '@/types';
 import { 
@@ -20,9 +21,11 @@ import {
 import { ManualList } from '@/components/dashboard';
 import { useAuth } from '@/hooks';
 
+const ALLOWED_ROLES = ['creador', 'admin'] as const;
+
 export default function CreadorPage() {
   const { user, loading: authLoading, logout } = useAuth({
-    allowedRoles: ['creador', 'admin'],
+    allowedRoles: ALLOWED_ROLES,
   });
   const router = useRouter();
 
@@ -94,13 +97,20 @@ export default function CreadorPage() {
     setCreatingContent(true);
 
     try {
-      await contenidoApi.create(contentForm);
+      const result = await contenidoApi.create(contentForm);
+      console.log('Contenido creado:', result);
       setSuccess('Contenido generado correctamente');
       setContentForm({ brand_manual_id: '', tipo: 'descripcion', titulo: '' });
       loadData();
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Error al generar contenido';
-      setError(errorMessage);
+      console.error('Error al crear contenido:', err);
+      if (axios.isAxiosError(err) && err.response) {
+        const errorMessage = err.response.data?.detail || 'Error al generar contenido';
+        setError(errorMessage);
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'Error al generar contenido';
+        setError(errorMessage);
+      }
     } finally {
       setCreatingContent(false);
     }
