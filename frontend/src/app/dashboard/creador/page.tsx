@@ -21,7 +21,7 @@ import {
 import { ManualList } from "@/components/dashboard";
 import { useAuth } from "@/hooks";
 
-const ALLOWED_ROLES = ["creador", "admin"] as const;
+const ALLOWED_ROLES: ("creador" | "admin")[] = ["creador", "admin"];
 
 export default function CreadorPage() {
   const {
