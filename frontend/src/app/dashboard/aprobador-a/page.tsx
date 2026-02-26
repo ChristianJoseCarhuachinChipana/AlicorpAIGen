@@ -18,9 +18,11 @@ import {
 import { StatsCard, StatGrid, ContentList, ContentDetail } from '@/components/dashboard';
 import { useAuth } from '@/hooks';
 
+const ALLOWED_ROLES_APROBADOR_A: ("aprobador_a" | "admin")[] = ["aprobador_a", "admin"];
+
 export default function AprobadorAPage() {
   const { user, loading: authLoading } = useAuth({
-    allowedRoles: ['aprobador_a', 'admin'],
+    allowedRoles: ALLOWED_ROLES_APROBADOR_A,
   });
 
   const [contenidos, setContenidos] = useState<Contenido[]>([]);

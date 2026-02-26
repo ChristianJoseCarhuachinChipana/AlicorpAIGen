@@ -15,6 +15,8 @@ import {
 import { StatsCard, StatGrid, ManualList } from '@/components/dashboard';
 import { useAuth } from '@/hooks';
 
+const ALLOWED_ROLES_ADMIN: ("admin")[] = ["admin"];
+
 /**
  * Calcula las estadísticas del dashboard
  */
@@ -31,7 +33,7 @@ function calculateStats(manuals: BrandManual[], contenidos: Contenido[], auditor
 
 export default function AdminPage() {
   const { user, loading: authLoading } = useAuth({
-    allowedRoles: ['admin'],
+    allowedRoles: ALLOWED_ROLES_ADMIN,
   });
 
   const [manuals, setManuals] = useState<BrandManual[]>([]);

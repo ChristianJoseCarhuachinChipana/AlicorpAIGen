@@ -18,6 +18,8 @@ import {
 import { AuditoriaList } from '@/components/dashboard';
 import { useAuth } from '@/hooks';
 
+const ALLOWED_ROLES_APROBADOR_B: ("aprobador_b" | "admin")[] = ["aprobador_b", "admin"];
+
 /**
  * Obtiene la clase de color según el score de conformidad
  */
@@ -29,7 +31,7 @@ function getScoreClass(score: number): string {
 
 export default function AprobadorBPage() {
   const { user, loading: authLoading } = useAuth({
-    allowedRoles: ['aprobador_b', 'admin'],
+    allowedRoles: ALLOWED_ROLES_APROBADOR_B,
   });
 
   const [contenidos, setContenidos] = useState<Contenido[]>([]);
